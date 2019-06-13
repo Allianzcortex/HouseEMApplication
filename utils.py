@@ -12,7 +12,7 @@ def create_connect():
     return conn, cur
 
 
-def insert_to_database(query):
+def execute_query(query):
     create_connect()
     conn, cur = create_connect()
     cur.execute(query)
