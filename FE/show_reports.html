@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Show Reports</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+    <script src="scripts.js"></script>
+
+    <!-- draw the charts  -->
+
+</head>
+
+<body>
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+    <a class="navbar-brand" href="index.html">Home</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+        <ul class="navbar-nav">
+            <li class="nav-item ">
+                <a class="nav-link" href="add_new_building.html">AddNewBuilding</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="add_new_em.html">AddNewEM</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="attach_building_em.html">AttachBuildingEM</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="show_reports.html">Reports</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+
+<div id="container">
+    <div class="container">
+        <h4>Check All EM List</h4>
+        <select id="em_list">
+        </select>
+        <br/>
+        <br/>
+        <button type="button" class="btn btn-success" id="get_new_chart">click to view the chart</button>
+        <br/>
+        <br/>
+        <button type="button" class="btn btn-success" id="download_csv">download as csv</button>
+
+        <div id="container_chart" class="container_chart">
+
+        </div>
+        <script>
+            $.ajax({
+                url: 'http://localhost:5000/api/getall/em', // url where to submit the request
+                type: "GET", // type of action POST || GET
+                dataType: 'json', // data type
+                headers: {
+                    'Access-Control-Allow-Origin': '*'
+                },
+                // data : $("#form").serialize(), // post data || get data
+                success: function (result) {
+                    // you can see the result from the console
+                    // tab of the developer tools
+                    var $select = $('#em_list');
+                    var listitems = '';
+                    var temp = 'random';
+                    $.each(result, function (key, value) {
+                        console.log(value);
+                        listitems += '<option value=' + value + '>' + value + '</option>';
+                    });
+                    $select.append(listitems);
+                },
+                error: function (xhr, resp, text) {
+                    console.log(xhr, resp, text);
+                }
+            })
+
+
+            var EM_date = [];
+            var EM_count = [];
+            var EM_tot_max = [];
+            var EM_tot_min = [];
+
+            $("#get_new_chart").on('click', function () {
+                // TODO get new index
+                s = {"em": $("#em_list").val()}
+                $.ajax({
+                    url: 'http://localhost:5000/api/get/charts', // url where to submit the request
+                    type: "POST", // type of action POST || GET
+                    dataType: 'json', // data type
+                    contentType: "application/json",
+                    // todo USE ?+paramater but not json
+                    data: JSON.stringify(s),
+                    success: function (result) {
+                        // you can see the result from the console
+                        // tab of the developer tools
+                        EM_date = result[0];
+                        EM_count = result[1].map(function (x) {
+                            return parseInt(x, 10);
+                        });
+                        EM_tot_max = result[2].map(function (x) {
+                            return parseInt(x, 10);
+                        });
+
+                        EM_tot_min = result[3].map(function (x) {
+                            return parseInt(x, 10);
+                        });
+                        console.log(result);
+                        console.log(EM_date);
+                        var result = EM_count.var
+                        chart = Highcharts.chart('container_chart', {
+                            title: {
+                                text: 'changing trendency'
+                            },
+
+                            xAxis: {
+                                categories: EM_date
+                            },
+
+                            yAxis: {
+                                title: {
+                                    text: 'Index'
+                                }
+                            },
+                            legend: {
+                                layout: 'vertical',
+                                align: 'right',
+                                verticalAlign: 'middle'
+                            },
+                            plotOptions: {
+                                series: {
+
+                                    // label: {
+                                    //     connectorAllowed: false
+                                    // },
+                                    // pointStart: 2010
+                                    // type:'timeline'
+                                },
+                                timeline: {
+                                    data: [1, 2]
+                                }
+                            },
+
+                            series: [{
+                                name: 'EM_count',
+                                data: EM_count
+                            },
+                                {
+                                    name: 'EM_tot_max',
+                                    data: EM_tot_max
+                                }
+                                ,
+                                {
+                                    name: 'EM_tot_min',
+                                    data: EM_tot_min
+                                }
+                            ],
+                            responsive: {
+                                rules: [{
+                                    condition: {
+                                        maxWidth: 500
+                                    },
+                                    chartOptions: {
+                                        legend: {
+                                            layout: 'horizontal',
+                                            align: 'center',
+                                            verticalAlign: 'bottom'
+                                        }
+                                    }
+                                }]
+                            }
+                        });
+
+                    },
+                    error:
+
+                        function (xhr, resp, text) {
+                        }
+                })
+            })
+            ;
+
+
+            $("#download_csv").on('click', function () {
+                console.log("download");
+                $.ajax({
+                    url: 'http://localhost:5000/api/download',
+                    type: "POST", // type of action POST || GET
+
+                    success: function (result) {
+                        // you can see the result from the console
+                        // tab of the developer tools
+                        const blob = new Blob([result], {type: "octet/stream"}),
+                            url = window.URL.createObjectURL(blob);
+                        console.log(result);
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'export.csv';
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+
+                    },
+                    error: function (xhr, resp, text) {
+
+                    }
+                    // error: function (err) {
+                    //     alert(JSON.parse(err))
+                    //     alert(JSON.stringify(err));
+                    // }
+                })
+
+
+            });
+
+
+        </script>
+
+    </div>
+</div>
+
+
+</body>
+</html>

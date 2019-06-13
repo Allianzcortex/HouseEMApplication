@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>BEM Application</title>
+    <title>Add Building </title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
@@ -14,7 +14,10 @@
 
 
     <script src="scripts.js"></script>
+    <script>
 
+
+    </script>
 </head>
 
 <body>
@@ -27,31 +30,60 @@
     <div class="collapse navbar-collapse" id="collapsibleNavbar">
         <ul class="navbar-nav">
             <li class="nav-item ">
-                <a class="nav-link" href="add_new_building.html">AddNewBuilding</a>
+                <a class="nav-link active" href="add_new_building.html">AddNewBuilding</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="add_new_em.html">AddNewEM</a>
             </li>
-             <li class="nav-item">
+            <li class="nav-item">
                 <a class="nav-link" href="attach_building_em.html">AttachBuildingEM</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="show_reports.html">Reports</a>
             </li>
-
         </ul>
     </div>
 </nav>
 
-
 <div class="container">
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-   <h1>Add House and Electricity Meter Together！！！</h1>
+    <h4>Add New Building</h4>
+    <div class="col col-lg-2">
+
+        <form id="form" action="" method="post">
+            <div id="error_5"></div>
+
+            identify number(unique,used when attaching Electricity Meter):
+            <input type="text" class="form-control" id="in" name="in">
+            name: <input type="text" class="form-control" id="ownername" name="ownername">
+
+            Address: <input type="text" class="form-control" id="address" name="address">
+            <div id="error_1"></div>
+
+
+            <div id="error_2"></div>
+            <button type="button" class="btn btn-success" id="add_building_submit" class="form-control" name="submit"
+                    value="submit">
+                Add
+            </button>
+
+        </form>
+    </div>
 </div>
+
+
+<!--<div class="container">-->
+<!--<h1>Add Building</h1>-->
+<!--<div class="form-group">-->
+<!--<select id="down">-->
+<!--</select>-->
+<!--</div>-->
+<!--&lt;!&ndash;Input Table Name: <input type="text" id="tableName" name="tableName"><br>&ndash;&gt;-->
+<!--<button type="button" class="btn btn-success" onclick="myFunction()">Search Table</button>-->
+<!--<br>-->
+<!--<br>-->
+<!--<table class="table table-bordered" id="records_table" border='1'>-->
+
+<!--</table>-->
+<!--</div>-->
 </body>
 </html>
