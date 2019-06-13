@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify, make_response, send_file, send_from_directory
+from flask import Flask, request, jsonify, make_response, send_file, send_from_directory, render_template
 from flask_cors import CORS, cross_origin
 
 import io, csv
 
 from utils import execute_query, create_connect
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='/static')
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
@@ -15,6 +15,10 @@ temp_download_res = []
 @app.route('/api/add/building', methods=['GET', 'POST'])
 @cross_origin()
 def add_building():
+    """
+    return all buildings
+    :return:
+    """
     identify_number = request.json['in']
     address = request.json['address']
     owner = request.json['ownername']
@@ -28,13 +32,16 @@ VALUES (\'{0}\', \'{1}\', \'{2}\');".format(identify_number, address, owner))
 @app.route('/api/add/em', methods=['GET', 'POST'])
 @cross_origin()
 def add_em():
+    """
+    add electricity meters and all metrics
+    :return:
+    """
     EM_identify_number = request.json['EM_in']
     EM_count = request.json['EM_count']
     EM_date = request.json['EM_date']
     EM_tot_max = request.json['EM_tot_max']
     EM_tot_min = request.json['EM_tot_min']
 
-    print(request.json)
     execute_query("INSERT INTO EMeter  (EM_count,EM_date,EM_tot_max,EM_tot_min,EM_identify_number) \
                   values ('{0}','{1}','{2}','{3}','{4}') \
                   ".format(EM_count, EM_date, EM_tot_max, EM_tot_min,
@@ -46,6 +53,11 @@ def add_em():
 @app.route('/api/get/charts', methods=['GET', 'POST'])
 @cross_origin()
 def get_chart():
+    """
+    Generate the line chart based on metrics given
+    and save the result into template_download_res in case of downloading requirements
+    :return:
+    """
     em = request.json['em']
     create_connect()
     conn, cur = create_connect()
@@ -60,7 +72,6 @@ def get_chart():
         res[2].append(r[2])
         res[3].append(r[3])
     conn.close()
-    print(res)
 
     global temp_download_res
     temp_download_res = res
@@ -70,10 +81,14 @@ def get_chart():
 @app.route('/api/download', methods=['GET', 'POST'])
 @cross_origin()
 def download_csv():
+    """
+    return the generated CSV file
+    and in front-end ,JQuery should receive it and generate the url
+    check scripts.js for more details
+    :return:
+    """
     global temp_download_res
-    print("temp_download_res is ")
-    print(temp_download_res)
-    print("------------------------------")
+
     with open("output.csv", "w+", newline='') as csv_file:
         # TODO optimize it by list-comprehension
         writer = csv.writer(csv_file, delimiter=',')
@@ -81,20 +96,16 @@ def download_csv():
         for r in temp_download_res:
             writer.writerow(r)
     return send_from_directory("", "output.csv", as_attachment=True)
-    # si = io.StringIO()
-    # cw = csv.writer(si)
-    # cw.writerows(zip(temp_download_res))
-    # output = make_response(si.getvalue())
-    # output.headers["Content-Disposition"] = "attachment; filename=export.csv"
-    # output.headers["Content-type"] = "text/csv"
-    # return output
-
-    # return send_file(io_, attachment_filename='xx.csv', as_attachment=True)
 
 
 @app.route('/api/add/relationship', methods=['GET', 'POST'])
 @cross_origin()
 def add_relationship():
+    """
+    use an intermediate table to store the relationship between
+    buildings and EMs
+    :return:
+    """
     building = request.json['building']
     em = request.json['em']
 
@@ -104,15 +115,13 @@ def add_relationship():
     2. check whether the record exists;if exists ,return error
     3. return successfully
     
-    or we just need to return all available EMs
+    or we just need to return all available EMs to generate a drop-down list
     """
 
     execute_query("INSERT INTO B_EM_Relationship (building_identify_number,EM_identify_number) \
 VALUES ('{0}','{1}');".format(building, em))
     execute_query("INSERT INTO EMeter (EM_identify_number) values ('{0}')".format(em))
     return jsonify("success")
-
-    # used to generate drop-down list
 
 
 @app.route('/api/get/relationship', methods=['GET', 'POST'])
@@ -146,12 +155,9 @@ def get_relationship():
         else:
             cur.execute("SELECT * FROM Building where identify_number={0}".format(index))
         for r in cur:
-            print("r is:")
-            print(r)
             put.append([])
             put[-1].extend(r[0:])
-    print(put)
-    print(res)
+
     conn.close()
     cur.close()
 
@@ -161,6 +167,10 @@ def get_relationship():
 @app.route('/api/getall/building', methods=['GET', 'POST'])
 @cross_origin()
 def get_all_building():
+    """
+    used to generate all buildings stored in database
+    :return:
+    """
     create_connect()
     conn, cur = create_connect()
     cur.execute("SELECT * FROM Building")
@@ -174,6 +184,11 @@ def get_all_building():
 
 
 def get_em(query):
+    """
+    return all EMs and all available EMs(i.e. EMs which are not attached to the building)
+    :param query: query sentence changed in different cases
+    :return:
+    """
     create_connect()
     conn, cur = create_connect()
     cur.execute(query)
@@ -201,4 +216,9 @@ def get_all_avialble_em():
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    """
+    Overall we want to separate the front-end and back-end
+    so we don't need to render the HTML file
+    :return:
+    """
+    return render_template('index.html')
